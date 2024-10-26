@@ -25,7 +25,6 @@ except RuntimeError as e:
 # Directories for the training dataset
 train_dir = "Path to Train Dataset"
 
-# ImageDataGenerator for training with augmentation
 train_datagen = ImageDataGenerator(
     rescale=1./255,
     rotation_range=30,
@@ -35,10 +34,9 @@ train_datagen = ImageDataGenerator(
     zoom_range=0.3,
     horizontal_flip=True,
     fill_mode='nearest',
-    validation_split=0.2  # 20% validation split
+    validation_split=0.2  
 )
 
-# Load training and validation data
 train_generator = train_datagen.flow_from_directory(
     train_dir,
     target_size=(224, 224),
@@ -55,40 +53,33 @@ validation_generator = train_datagen.flow_from_directory(
     subset='validation'
 )
 
-# Learning rate scheduler
 lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
     initial_learning_rate=1e-5,
     decay_steps=10000,
     decay_rate=0.96
 )
 
-# Load pre-trained ResNet50 model (without the top layer)
 base_model_resnet = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
 
-# Gradual unfreezing strategy
-for layer in base_model_resnet.layers[:-10]:  # Freeze all but the last 10 layers
+for layer in base_model_resnet.layers[:-10]:  
     layer.trainable = False
 for layer in base_model_resnet.layers[-10:]:
     layer.trainable = True
 
-# Create the model
 model_resnet = Sequential([
     base_model_resnet,
     GlobalAveragePooling2D(),
     BatchNormalization(),
-    Dense(512, activation='relu', kernel_regularizer=l2(0.001)),  # Regularization
+    Dense(512, activation='relu', kernel_regularizer=l2(0.001)), 
     Dropout(0.5),
-    Dense(len(train_generator.class_indices), activation='softmax')  # Number of classes
+    Dense(len(train_generator.class_indices), activation='softmax')  
 ])
 
-# Compile the model
 optimizer = Adam(learning_rate=lr_schedule)
 model_resnet.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
-# Print model summary
 model_resnet.summary()
 
-# EarlyStopping callback
 early_stopping = EarlyStopping(
     monitor='val_accuracy',
     patience=15,
@@ -96,14 +87,12 @@ early_stopping = EarlyStopping(
     verbose=1
 )
 
-# Train the model
 history_resnet = model_resnet.fit(
     train_generator,
-    epochs=150,  # Increased number of epochs
+    epochs=150,  # Increas number of epochs
     validation_data=validation_generator,
     callbacks=[early_stopping]
 )
 
-# Save the trained model
 model_resnet.save('resnet50_fruit_freshness_classifier2.h5')
 print("Model saved successfully.")
