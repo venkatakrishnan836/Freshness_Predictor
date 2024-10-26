@@ -28,7 +28,7 @@ def predict_and_analyze_images_from_folder(folder_path, model, class_labels, tru
 
         img = load_img(img_path, target_size=(224, 224))
         img_array = img_to_array(img)
-        img_preprocessed = np.expand_dims(img_array / 255.0, axis=0)  # Normalize the image
+        img_preprocessed = np.expand_dims(img_array / 255.0, axis=0) 
 
         # Make prediction
         pred = model.predict(img_preprocessed)
